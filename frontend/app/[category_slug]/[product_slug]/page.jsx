@@ -1,0 +1,149 @@
+import axios from 'axios';
+
+export default async function ProductDetail({params}){
+
+  const { category_slug, product_slug } = await  params;
+  let product = null;
+  let error = null;
+
+
+  
+    
+    
+      try{
+        const  response = await axios.get(`http://127.0.0.1:8000/${category_slug}/${product_slug}/`);
+        product = (response.data);
+        
+      }catch(err){
+            error = ({status: err.response?.status || "Network Error", message: err.response?.data?.message || err.message || "Unknown error"})
+
+      }
+    return(
+      <>
+  <section className="section-content padding-y bg">
+  <div className="container">
+    {/* ============================ COMPONENT 1 ================================= */}
+    <div className="card">
+      <div className="row no-gutters">
+        <aside className="col-md-6">
+          <article className="gallery-wrap">
+            <div className="img-big-wrap">
+              <a href="#">
+                <img src={product.image} />
+              </a>
+            </div>{" "}
+            {/* img-big-wrap.// */}
+          </article>{" "}
+          {/* gallery-wrap .end// */}
+        </aside>
+        <main className="col-md-6 border-left">
+          <article className="content-body">
+            <h2 className="title">{product.Product_name}</h2>
+            <div className="mb-3">
+              <var className="price h4">{product.price}</var>
+            </div>
+            <p> {product.description} </p>
+            <hr />
+            <div className="row">
+              <div className="item-option-select">
+                <h6>Choose Color</h6>
+                <div
+                  className="btn-group btn-group-sm btn-group-toggle"
+                  data-toggle="buttons"
+                >
+                  <label className="btn btn-light">
+                    <input type="radio" name="radio_color" /> Silver
+                  </label>
+                  <label className="btn btn-light">
+                    <input type="radio" name="radio_color" /> Gray
+                  </label>
+                  <label className="btn btn-light active">
+                    <input type="radio" name="radio_color checked" /> Gold
+                  </label>
+                  <label className="btn btn-light">
+                    <input type="radio" name="radio_color" /> Black
+                  </label>
+                </div>
+              </div>
+            </div>{" "}
+            {/* row.// */}
+            <div className="row">
+              <div className="item-option-select">
+                <h6>Select Size</h6>
+                <div
+                  className="btn-group btn-group-sm btn-group-toggle"
+                  data-toggle="buttons"
+                >
+                  <label className="btn btn-light">
+                    <input type="radio" name="radio_color" /> S
+                  </label>
+                  <label className="btn btn-light active">
+                    <input type="radio" name="radio_color" defaultChecked="" />{" "}
+                    M
+                  </label>
+                  <label className="btn btn-light">
+                    <input type="radio" name="radio_color" /> L
+                  </label>
+                  <label className="btn btn-light">
+                    <input type="radio" name="radio_color" /> XL
+                  </label>
+                </div>
+              </div>
+            </div>{" "}
+            {/* row.// */}
+            <hr />
+            {product.stock > 0 ?(
+            <a href="./product-detail.html" className="btn  btn-primary">
+  
+              <span className="text">Add to cart</span>
+              <i className="fas fa-shopping-cart" />
+            </a>
+            ):(<label className="btn btn-secondary">Out of Stock</label>)}
+          </article>{" "}
+          {/* product-info-aside .// */}
+        </main>{" "}
+        {/* col.// */}
+      </div>{" "}
+      {/* row.// */}
+    </div>{" "}
+    {/* card.// */}
+    {/* ============================ COMPONENT 1 END .// ================================= */}
+    <br />
+    <div className="row">
+      <div className="col-md-9">
+        <header className="section-heading">
+          <h3>Customer Reviews </h3>
+        </header>
+        <article className="box mb-3">
+          <div className="icontext w-100">
+            <img
+              src="./images/avatars/avatar1.jpg"
+              className="img-xs icon rounded-circle"
+            />
+            <div className="text">
+              <span className="date text-muted float-md-right">
+                24.04.2020{" "}
+              </span>
+              <h6 className="mb-1">Mike John </h6>
+            </div>
+          </div>{" "}
+          {/* icontext.// */}
+          <div className="mt-3">
+            <p>
+              Dummy comment Lorem ipsum dolor sit amet, consectetur adipisicing
+              elit, sed do eiusmod tempor incididunt ut labore et dolore magna
+              aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+              laboris nisi ut aliquip
+            </p>
+          </div>
+        </article>
+      </div>{" "}
+      {/* col.// */}
+    </div>{" "}
+    {/* row.// */}
+  </div>{" "}
+  {/* container .//  */}
+  </section>
+</>
+    )
+}
