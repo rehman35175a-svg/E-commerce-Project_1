@@ -1,4 +1,5 @@
-import axios from 'axios';
+import api from "@/lib/axios";
+import AddToCartButton from "../../components/commonLayouts/AddToCartButton";
 
 export default async function ProductDetail({params}){
 
@@ -11,13 +12,28 @@ export default async function ProductDetail({params}){
     
     
       try{
-        const  response = await axios.get(`http://127.0.0.1:8000/${category_slug}/${product_slug}/`);
+        const  response = await api.get(`/store/${category_slug}/${product_slug}/`);
         product = (response.data);
         
       }catch(err){
             error = ({status: err.response?.status || "Network Error", message: err.response?.data?.message || err.message || "Unknown error"})
 
       }
+
+      if (!product) {
+    return (
+      <section className="section-content padding-y bg">
+        <div className="container">
+          <div className="card p-5 text-center">
+            <h4>Product not found</h4>
+            <p className="text-muted">
+              {error?.message || "This product may no longer be available."}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
     return(
       <>
   <section className="section-content padding-y bg">
@@ -93,12 +109,10 @@ export default async function ProductDetail({params}){
             {/* row.// */}
             <hr />
             {product.stock > 0 ?(
-            <a href="./product-detail.html" className="btn  btn-primary">
-  
-              <span className="text">Add to cart</span>
-              <i className="fas fa-shopping-cart" />
-            </a>
-            ):(<label className="btn btn-secondary">Out of Stock</label>)}
+                              
+                              <AddToCartButton product_id={product.id}/>
+            
+                              ):(<label className="btn btn-block btn-secondary">Out of Stock</label>)}
           </article>{" "}
           {/* product-info-aside .// */}
         </main>{" "}

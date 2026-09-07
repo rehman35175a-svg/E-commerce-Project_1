@@ -1,19 +1,54 @@
-import axios from 'axios';
+import api from "@/lib/axios";
 import Link from "next/link";
+import SearchBar from "./SearchBar";
+import CartCounter from "./CartCounter";
+import LogoutButton from "./LogoutButton"; 
+import { cookies } from "next/headers";
 
-
-export default async function Header(){
+export default async function Header() {
   let products = [];
   let error = null;
-     
-  try{
-        const  response = await axios.get(`http://127.0.0.1:8000/category`);
-        products = (response.data);
-        
-      }catch(err){
-            error = ({status: err.response?.status || "Network Error", message: err.response?.data?.message || err.message || "Unknown error"})
+  let cartCount = 0;
+  let user = null;
 
-    }
+  // ---------- CATEGORY FETCH ----------
+  try {
+    const response = await api.get(`/category/`);
+    products = response.data.results;
+  } catch (err) {
+    error = {
+      status: err.response?.status || "Network Error",
+      message: err.response?.data?.message || err.message || "Unknown error",
+    };
+  }
+
+  try {
+    const cartRes = await api.get(`/cart/`);
+    console.log("CART RESPONSE:", cartRes.data);
+    cartCount = cartRes.data.count;   
+  } catch (err) {
+    cartCount = 0;
+  }
+
+
+  // ---------- CURRENT USER CHECK ----------
+  try {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("sessionid");
+
+  if (sessionCookie) {
+    const userRes = await api.get("/accounts/user/", {
+      headers: {
+        Cookie: `sessionid=${sessionCookie.value}`,
+      },
+    });
+
+    user = userRes.data;
+  }
+  } catch (err) {
+  user = null;
+  }
+  
     return(
         <header className="section-header">
   <nav className="navbar p-md-0 navbar-expand-sm navbar-light border-bottom">
@@ -104,40 +139,38 @@ export default async function Header(){
         </Link>
         
         <div className="col-lg  col-md-6 col-sm-12 col">
-          <form action="#" className="search">
-            <div className="input-group w-100">
-              <input
-                type="text"
-                className="form-control"
-                style={{ width: "60%" }}
-                placeholder="Search"
-              />
-              <div className="input-group-append">
-                <button className="btn btn-primary" type="submit">
-                  <i className="fa fa-search" />
-                </button>
-              </div>
-            </div>
-          </form>{" "}
+           <SearchBar />
           {/* search-wrap .end// */}
         </div>{" "}
         {/* col.// */}
         <div className="col-lg-3 col-sm-6 col-8 order-2 order-lg-3">
           <div className="d-flex justify-content-end mb-3 mb-lg-0">
             <div className="widget-header">
-              <small className="title text-muted">Welcome guest!</small>
-              <div>
-                <a href="./signin.html">Sign in</a>{" "}
-                <span className="dark-transp"> | </span>
-                <a href="./register.html"> Register</a>
-              </div>
-            </div>
-            <a href="./cart.html" className="widget-header pl-3 ml-3">
-              <div className="icon icon-sm rounded-circle border">
-                <i className="fa fa-shopping-cart" />
-              </div>
-              <span className="badge badge-pill badge-danger notify">0</span>
-            </a>
+            {user ? (
+              <>
+                <small className="title text-muted">
+                  Welcome, {user.name}!
+                </small>
+                <div>
+                  <Link href="/dashboard">Dashboard</Link>
+                  <span className="dark-transp"> | </span>
+                  <LogoutButton />
+                </div>
+              </>
+            ) : (
+              <>
+                <small className="title text-muted">Welcome guest!</small>
+                <div>
+                  <Link href="./signin">Login</Link>
+                  <span className="dark-transp"> | </span>
+                  <Link href="./register">Register</Link>
+                </div>
+              </>
+            )}
+          </div>
+            <CartCounter />
+            
+           
           </div>{" "}
           {/* widgets-wrap.// */}
         </div>{" "}

@@ -1,22 +1,35 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import generics
+from rest_framework import generics, filters
 from store.models import Product
 from category.models import Category
 from .serializers import ProductSerializer
 
 class ProductList(generics.ListAPIView):
     serializer_class = ProductSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['Product_name', 'description']
 
     def get_queryset(self):
-
         category_slug = self.kwargs.get('category_slug')
-       
+        queryset = Product.objects.filter(is_available=True)
 
         if category_slug:
             category = get_object_or_404(Category, SLug=category_slug)
-            return Product.objects.filter(category_key=category, is_available=True)
+            queryset = queryset.filter(category_key=category)
 
-        return Product.objects.all().filter(is_available=True)
+        # ---------- Price Filter ----------
+
+        min_price = self.request.query_params.get('min_price')
+        max_price = self.request.query_params.get('max_price')
+
+        if min_price:
+            queryset = queryset.filter(price__gte=min_price)
+        if max_price:
+            queryset = queryset.filter(price__lte=max_price)
+
+        return queryset
+
+        
 
 
 class SingleProduct(generics.RetrieveAPIView):
