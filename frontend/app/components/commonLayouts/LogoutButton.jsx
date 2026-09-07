@@ -1,15 +1,13 @@
 "use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
+
 
 async function fetchCsrfToken() {
   await api.get("/accounts/csrf/");
 }
 
 export default function LogoutButton() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const handleLogout = async (e) => {
@@ -18,13 +16,12 @@ export default function LogoutButton() {
 
     try {
       await fetchCsrfToken();
-  
-      await api.post( "/accounts/logout/");
 
-      router.refresh();
+      await api.post("/accounts/logout/" );
+
+      window.location.reload();   // Refresh the current window
     } catch (err) {
-      
-    } finally {
+      console.error("Logout failed:", err);
       setLoading(false);
     }
   };

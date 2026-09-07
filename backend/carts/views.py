@@ -1,5 +1,5 @@
 from .models import *
-from store.models import *  
+from store.models import *
 from .serializers import *
 from rest_framework import generics, status
 from django import shortcuts
@@ -7,19 +7,48 @@ from rest_framework.response import Response
 
 
 class CartCreation(generics.GenericAPIView):
-    def _cart_id(self, request):
-        cart = request.session.session_key
-        if not cart:
+
+    def get_cart(self, request):
+        """Returns the Cart object for the current user/guest, creating it if needed."""
+        if request.user.is_authenticated:
+            cart, created = Cart.objects.get_or_create(user=request.user)
+            return cart
+
+        # Guest — session-based
+        session_key = request.session.session_key
+        if not session_key:
             request.session.create()
-            cart = request.session.session_key
+            session_key = request.session.session_key
+
+        cart, created = Cart.objects.get_or_create(cart_id=session_key, user__isnull=True)
         return cart
 
-    # Shared helper — reused by CartCalculation, AddToCartView, RemoveFromCartView etc.
+    # Validate the Cart Items
+
+    def validate_cart_items(self, cart):
+
+        invalid_items = []
+
+        for item in CartItem.objects.filter(cart=cart, is_active=True):
+            if not item.product.is_available:
+                item.is_active = False
+                item.save()
+                invalid_items.append(f"{item.product.Product_name} is no longer available")
+            elif item.quantity > item.product.stock:
+                item.quantity = item.product.stock
+                item.save()
+                invalid_items.append(f"{item.product.Product_name} quantity adjusted to available stock")
+
+        return invalid_items
+
+    # Cart Summery
+    
     def get_cart_summary(self, request):
         total = 0
         quantity = 0
 
-        cart = shortcuts.get_object_or_404(Cart, cart_id=self._cart_id(request))
+        cart = self.get_cart(request)
+        self.validate_cart_items(cart)
         cart_items = CartItem.objects.filter(cart=cart, is_active=True)
 
         for item in cart_items:
@@ -40,16 +69,13 @@ class CartCreation(generics.GenericAPIView):
         }
 
 
-class CartItems(CartCreation, generics.ListAPIView):         
+class CartItems(CartCreation, generics.ListAPIView):
     serializer_class = CartItemSerializer
-
 
     def get_queryset(self):
         product_id = self.kwargs.get('product_id')
 
-        cart = Cart.objects.filter(cart_id=self._cart_id(self.request)).first()
-        if not cart:
-            return CartItem.objects.none()
+        cart = self.get_cart(self.request)
 
         if product_id:
             product = shortcuts.get_object_or_404(Product, id=product_id)
@@ -66,7 +92,7 @@ class AddToCartView(CartCreation):
         product_id = self.kwargs.get('product_id')
         product = shortcuts.get_object_or_404(Product, id=product_id)
 
-        cart, cart_created = Cart.objects.get_or_create(cart_id=self._cart_id(request))
+        cart = self.get_cart(request)
         cart_item, item_created = CartItem.objects.get_or_create(
             product=product, cart=cart, defaults={"quantity": 1}
         )
@@ -104,7 +130,7 @@ class RemoveFromCartView(CartCreation):
     def post(self, request, *args, **kwargs):
         product_id = self.kwargs.get('product_id')
 
-        cart = shortcuts.get_object_or_404(Cart, cart_id=self._cart_id(request))
+        cart = self.get_cart(request)
         product = shortcuts.get_object_or_404(Product, id=product_id)
         cart_item = shortcuts.get_object_or_404(CartItem, product=product, cart=cart)
 
@@ -123,7 +149,7 @@ class RemoveCartItemView(CartCreation):
     def post(self, request, *args, **kwargs):
         product_id = self.kwargs.get('product_id')
 
-        cart = shortcuts.get_object_or_404(Cart, cart_id=self._cart_id(request))
+        cart = self.get_cart(request)
         product = shortcuts.get_object_or_404(Product, id=product_id)
         cart_item = shortcuts.get_object_or_404(CartItem, product=product, cart=cart)
 

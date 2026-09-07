@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
@@ -9,8 +9,34 @@ async function fetchCsrfToken() {
   await api.get(`/accounts/csrf/`);
 }
 
+function goBackOrHome(router) {
+  if (typeof window !== "undefined" && window.history.length > 1) {
+    router.back();
+  } else {
+    router.push("/");
+  }
+}
+
 export default function Register() {
   const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+      const checkLogin = async () => {
+        try {
+          const response = await api.get("/accounts/user/");
+          if (response.data) {
+            goBackOrHome(router);
+            return;
+          }
+        } catch (err) {
+          // 401/403 aana normal hai — login form dikhega
+        }
+        setCheckingAuth(false);
+      };
+  
+      checkLogin();
+    }, [router]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -24,6 +50,9 @@ export default function Register() {
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+
+  
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -83,6 +112,7 @@ export default function Register() {
       });
 
       setRegistrationSuccess(true); // Register hote hi verification message dikhao
+      
     } catch (err) {
       if (err.response?.data) {
         // Backend se aane wale field-wise errors handle karo
@@ -99,6 +129,10 @@ export default function Register() {
     }
   };
 
+  if (checkingAuth) {
+    return null;
+  }
+  
   // ---------- REGISTRATION SUCCESS — Verification message dikhao ----------
   if (registrationSuccess) {
     return (

@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import *
 from .models import *
+from carts.models import Cart, CartItem
 from .utils import *
 from django.contrib.auth import login, logout, authenticate
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -66,14 +67,12 @@ class VerifyEmailView(APIView):
         )
 
 # ------------------- LOGIN -------------------
-class LoginView(APIView):
 
-    # def get(self, request):
-    #     return Response({"authenticated": request.user.is_authenticated })
-                                                                              
+class LoginView(APIView):
+    
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
-
+        
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -84,12 +83,40 @@ class LoginView(APIView):
         if user is not None:
             if not user.is_active:
                 return Response(
-                    {"message": "Please verify your email before logging in."},
+                    {"message": "Account is not active"},
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
-            login(request, user)
-            return Response( {"message": "Login successful"},)
+            # ---------- Guest session ID login se PEHLE note kar lo ----------
+            guest_session_key = request.session.session_key
+
+            login(request, user)   # Session rotate ho jayegi
+
+            # ---------- Guest cart dhoondo aur merge karo ----------
+            if guest_session_key:
+                guest_cart = Cart.objects.filter(
+                    cart_id=guest_session_key, user__isnull=True
+                ).first()
+
+                if guest_cart:
+                    user_cart, created = Cart.objects.get_or_create(user=user)
+
+                    guest_items = CartItem.objects.filter(cart=guest_cart, is_active=True)
+                    for item in guest_items:
+                        existing_item = CartItem.objects.filter(
+                            cart=user_cart, product=item.product, is_active=True
+                        ).first()
+
+                        if existing_item:
+                            existing_item.quantity += item.quantity
+                            existing_item.save()
+                        else:
+                            item.cart = user_cart
+                            item.save()
+
+                    guest_cart.delete()   # Purana guest cart hata do
+
+            return Response({"message": "Login successful"}, status=status.HTTP_200_OK)
 
         return Response(
             {"message": "Invalid email or password"},

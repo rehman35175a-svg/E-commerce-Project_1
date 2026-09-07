@@ -1,9 +1,11 @@
 from django.db import models
 from store.models import Product
+from accounts.models import Account
 
 # Create your models here.
 class Cart(models.Model):
     cart_id = models.CharField(max_length=250, blank=True)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE, null=True, related_name="carts" ) 
     date_added = models.DateField(auto_now_add=True)
 
     def __str__(self):
