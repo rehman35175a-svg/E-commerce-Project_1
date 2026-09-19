@@ -4,13 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import api from "@/lib/axios";
 
-// function getCookie(name) {
-//   if (typeof document === "undefined") return null;
-//   const value = `; ${document.cookie}`;
-//   const parts = value.split(`; ${name}=`);
-//   if (parts.length === 2) return parts.pop().split(";").shift();
-//   return null;
-// }
 
 async function fetchCsrfToken() {
   await api.get(`/accounts/csrf/`);
@@ -36,7 +29,7 @@ export default function ForgotPassword() {
     setLoading(true);
     try {
       await fetchCsrfToken();
-      const res = await api.post( `/accounts/password-reset-request/`, { email } );
+      const res = await api.post( `/accounts/password-reset/`, { email } );
       setMessage(res.data.message);
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong.");

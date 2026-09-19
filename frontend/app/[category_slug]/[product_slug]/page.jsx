@@ -122,39 +122,7 @@ export default async function ProductDetail({params}){
     </div>{" "}
     {/* card.// */}
     {/* ============================ COMPONENT 1 END .// ================================= */}
-    <br />
-    <div className="row">
-      <div className="col-md-9">
-        <header className="section-heading">
-          <h3>Customer Reviews </h3>
-        </header>
-        <article className="box mb-3">
-          <div className="icontext w-100">
-            <img
-              src="./images/avatars/avatar1.jpg"
-              className="img-xs icon rounded-circle"
-            />
-            <div className="text">
-              <span className="date text-muted float-md-right">
-                24.04.2020{" "}
-              </span>
-              <h6 className="mb-1">Mike John </h6>
-            </div>
-          </div>{" "}
-          {/* icontext.// */}
-          <div className="mt-3">
-            <p>
-              Dummy comment Lorem ipsum dolor sit amet, consectetur adipisicing
-              elit, sed do eiusmod tempor incididunt ut labore et dolore magna
-              aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-              laboris nisi ut aliquip
-            </p>
-          </div>
-        </article>
-      </div>{" "}
-      {/* col.// */}
-    </div>{" "}
-    {/* row.// */}
+  
   </div>{" "}
   {/* container .//  */}
   </section>

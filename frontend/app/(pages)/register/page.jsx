@@ -209,6 +209,7 @@ export default function Register() {
                 <input
                   type="tel"
                   name="phone"
+                  placeholder="+9230000000"
                   className={`form-control ${errors.phone ? "is-invalid" : ""}`}
                   value={formData.phone}
                   onChange={handleChange}

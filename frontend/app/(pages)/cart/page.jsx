@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import Link from "next/link";
 
 
 export default function Cart() {
+    const router = useRouter();
+
     const [cart, setCart] = useState({
         items: [],
         total: 0,
@@ -16,7 +19,7 @@ export default function Cart() {
 
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [updatingId, setUpdatingId] = useState(null); // disables buttons mid-request
+    const [updatingId, setUpdatingId] = useState(null);
 
     useEffect(() => {
         fetchCart();
@@ -25,10 +28,7 @@ export default function Cart() {
     const fetchCart = async () => {
         try {
             setLoading(true);
-            const response = await api.get(
-                `/cart/calculation/`,
-                
-            );
+            const response = await api.get(`/cart/calculation/`);
             setCart(response.data);
             setError(null);
         } catch (err) {
@@ -45,10 +45,7 @@ export default function Cart() {
     const increaseQuantity = async (productId) => {
         try {
             setUpdatingId(productId);
-            const response = await api.post(
-                `/cart/${productId}/`,
-               
-            );
+            const response = await api.post(`/cart/${productId}/`);
             setCart(response.data);
             setError(null);
         } catch (err) {
@@ -61,14 +58,10 @@ export default function Cart() {
     const decreaseQuantity = async (productId) => {
         try {
             setUpdatingId(productId);
-            const response = await api.post(
-                `/cart/remove_cart/${productId}/`,
-                
-            );
-            
+            const response = await api.post(`/cart/remove_cart/${productId}/`);
             setCart(response.data);
             setError(null);
-            window.dispatchEvent(new Event("cartUpdated"));   // For Cart Counter
+            window.dispatchEvent(new Event("cartUpdated"));
         } catch (err) {
             setError(err.response?.data?.message || err.message);
         } finally {
@@ -79,18 +72,23 @@ export default function Cart() {
     const removeItem = async (productId) => {
         try {
             setUpdatingId(productId);
-            const response = await api.post(
-                `/cart/remove_cart_item/${productId}/`,
-                
-            );
-            
+            const response = await api.post(`/cart/remove_cart_item/${productId}/`);
             setCart(response.data);
             setError(null);
-            window.dispatchEvent(new Event("cartUpdated"));   // For Cart Counter
+            window.dispatchEvent(new Event("cartUpdated"));
         } catch (err) {
             setError(err.response?.data?.message || err.message);
         } finally {
             setUpdatingId(null);
+        }
+    };
+
+    const handleCheckout = async () => {
+        try {
+            await api.get("/accounts/user/");
+            router.push("/place-order");
+        } catch (err) {
+            router.push("/signin?next=/place-order");
         }
     };
 
@@ -146,7 +144,7 @@ export default function Cart() {
                                             <tr key={item.id}>
                                                 <td>
                                                     <figure className="itemside align-items-center">
-                                                        <Link href={`/${item.product.category_key.SLug}/${item.product.slug}`} className="title">
+                                                        <Link href={`/${item.product.category_key?.SLug || ""}/${item.product.slug}`} className="title">
                                                         <div className="aside">
                                                             <img
                                                                 src={getImageUrl(item.product.image)}
@@ -157,7 +155,7 @@ export default function Cart() {
                                                         </Link>
                                                         <figcaption className="info">
 
-                                                            <Link href={`/${item.product.category_key.SLug}/${item.product.slug}`} className="title">
+                                                            <Link href={`/${item.product.category_key?.SLug || ""}/${item.product.slug}`} className="title">
                                                                 {item.product.Product_name}
                                                             </Link>
                                                             <p className="text-muted small">
@@ -264,9 +262,13 @@ export default function Cart() {
                                 <p className="text-center mb-3">
                                     <img src="./images/misc/payments.png" height={26} />
                                 </p>
-                                <Link href="/checkout" className="btn btn-primary btn-block">
+                                <button
+                                    className="btn btn-primary btn-block"
+                                    onClick={handleCheckout}
+                                    disabled={cart.items.length === 0}
+                                >
                                     Checkout
-                                </Link>
+                                </button>
                                 <Link href="/store" className="btn btn-light btn-block">
                                     Continue Shopping
                                 </Link>

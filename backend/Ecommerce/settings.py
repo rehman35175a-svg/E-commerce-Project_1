@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'accounts',
     'store',
     'carts',
+    'orders', 
     'django_filters',
     
 ]

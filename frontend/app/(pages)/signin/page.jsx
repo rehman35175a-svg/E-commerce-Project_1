@@ -10,7 +10,6 @@ async function fetchCsrfToken() {
   await api.get(`/accounts/csrf/`);
 }
 
-// ---------- Helper: Peeche jao, agar history na ho to Home pe bhejo ----------
 function goBackOrHome(router) {
   if (typeof window !== "undefined" && window.history.length > 1) {
     router.back();
@@ -22,27 +21,30 @@ function goBackOrHome(router) {
 export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const nextUrl = searchParams.get("next");
 
   const [successMessage, setSuccessMessage] = useState("");
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // ---------- Agar user ALREADY login hai, to wahi page pe bhej do jahan se aaya tha ----------
   useEffect(() => {
     const checkLogin = async () => {
       try {
         const response = await api.get("/accounts/user/");
         if (response.data) {
-          goBackOrHome(router);
+          if (nextUrl) {
+            router.replace(nextUrl);
+          } else {
+            goBackOrHome(router);
+          }
           return;
         }
       } catch (err) {
-        // 401/403 aana normal hai — login form dikhega
       }
       setCheckingAuth(false);
     };
 
     checkLogin();
-  }, [router]);
+  }, [router, nextUrl]);
 
   useEffect(() => {
     if (searchParams.get("verified") === "true") {
@@ -81,13 +83,18 @@ export default function SignIn() {
 
       const res = await api.post(
         `/accounts/login/`,
-        { email: formData.email, password: formData.password }
+        { email: formData.email, password: formData.password },
       );
 
       window.dispatchEvent(new Event("cartUpdated"));
 
-      router.push("/");     // ⬅️ Ab hamesha Home page pe
-      router.refresh();      // Phir usi page pe bhej do jahan se user aaya tha
+      if (nextUrl) {
+      router.push(nextUrl);
+    } else {
+      router.push("/");
+    }
+    router.refresh();
+    
     } catch (err) {
       if (err.response?.data) {
         const backendErrors = err.response.data;
