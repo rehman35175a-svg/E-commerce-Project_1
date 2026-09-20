@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 import AddToCartButton from "../../components/commonLayouts/AddToCartButton";
+import ProductGallery from "../../components/commonLayouts/ProductGallery";
 
 export default async function ProductDetail({params}){
 
@@ -7,20 +8,14 @@ export default async function ProductDetail({params}){
   let product = null;
   let error = null;
 
+  try{
+    const  response = await api.get(`/store/${category_slug}/${product_slug}/`);
+    product = (response.data);
+  }catch(err){
+    error = ({status: err.response?.status || "Network Error", message: err.response?.data?.message || err.message || "Unknown error"})
+  }
 
-  
-    
-    
-      try{
-        const  response = await api.get(`/store/${category_slug}/${product_slug}/`);
-        product = (response.data);
-        
-      }catch(err){
-            error = ({status: err.response?.status || "Network Error", message: err.response?.data?.message || err.message || "Unknown error"})
-
-      }
-
-      if (!product) {
+  if (!product) {
     return (
       <section className="section-content padding-y bg">
         <div className="container">
@@ -34,98 +29,83 @@ export default async function ProductDetail({params}){
       </section>
     );
   }
-    return(
-      <>
-  <section className="section-content padding-y bg">
-  <div className="container">
-    {/* ============================ COMPONENT 1 ================================= */}
-    <div className="card">
-      <div className="row no-gutters">
-        <aside className="col-md-6">
-          <article className="gallery-wrap">
-            <div className="img-big-wrap">
-              <a href="#">
-                <img src={product.image} />
-              </a>
-            </div>{" "}
-            {/* img-big-wrap.// */}
-          </article>{" "}
-          {/* gallery-wrap .end// */}
-        </aside>
-        <main className="col-md-6 border-left">
-          <article className="content-body">
-            <h2 className="title">{product.Product_name}</h2>
-            <div className="mb-3">
-              <var className="price h4">{product.price}</var>
+
+  return(
+    <>
+      <section className="section-content padding-y bg">
+        <div className="container">
+          <div className="card">
+            <div className="row no-gutters">
+              <aside className="col-md-6">
+                <ProductGallery
+                  mainImage={product.image}
+                  galleryImages={product.gallery_images}
+                  productName={product.Product_name}
+                />
+              </aside>
+              <main className="col-md-6 border-left">
+                <article className="content-body">
+                  <h2 className="title">{product.Product_name}</h2>
+                  <div className="mb-3">
+                    <var className="price h4">{product.price}</var>
+                  </div>
+                  <p> {product.description} </p>
+                  <hr />
+                  <div className="row">
+                    <div className="item-option-select">
+                      <h6>Choose Color</h6>
+                      <div
+                        className="btn-group btn-group-sm btn-group-toggle"
+                        data-toggle="buttons"
+                      >
+                        <label className="btn btn-light">
+                          <input type="radio" name="radio_color" /> Silver
+                        </label>
+                        <label className="btn btn-light">
+                          <input type="radio" name="radio_color" /> Gray
+                        </label>
+                        <label className="btn btn-light active">
+                          <input type="radio" name="radio_color checked" /> Gold
+                        </label>
+                        <label className="btn btn-light">
+                          <input type="radio" name="radio_color" /> Black
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="item-option-select">
+                      <h6>Select Size</h6>
+                      <div
+                        className="btn-group btn-group-sm btn-group-toggle"
+                        data-toggle="buttons"
+                      >
+                        <label className="btn btn-light">
+                          <input type="radio" name="radio_color" /> S
+                        </label>
+                        <label className="btn btn-light active">
+                          <input type="radio" name="radio_color" defaultChecked="" />{" "}
+                          M
+                        </label>
+                        <label className="btn btn-light">
+                          <input type="radio" name="radio_color" /> L
+                        </label>
+                        <label className="btn btn-light">
+                          <input type="radio" name="radio_color" /> XL
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <hr />
+                  {product.stock > 0 ?(
+                    <AddToCartButton product_id={product.id}/>
+                  ):(<label className="btn btn-block btn-secondary">Out of Stock</label>)}
+                </article>
+              </main>
             </div>
-            <p> {product.description} </p>
-            <hr />
-            <div className="row">
-              <div className="item-option-select">
-                <h6>Choose Color</h6>
-                <div
-                  className="btn-group btn-group-sm btn-group-toggle"
-                  data-toggle="buttons"
-                >
-                  <label className="btn btn-light">
-                    <input type="radio" name="radio_color" /> Silver
-                  </label>
-                  <label className="btn btn-light">
-                    <input type="radio" name="radio_color" /> Gray
-                  </label>
-                  <label className="btn btn-light active">
-                    <input type="radio" name="radio_color checked" /> Gold
-                  </label>
-                  <label className="btn btn-light">
-                    <input type="radio" name="radio_color" /> Black
-                  </label>
-                </div>
-              </div>
-            </div>{" "}
-            {/* row.// */}
-            <div className="row">
-              <div className="item-option-select">
-                <h6>Select Size</h6>
-                <div
-                  className="btn-group btn-group-sm btn-group-toggle"
-                  data-toggle="buttons"
-                >
-                  <label className="btn btn-light">
-                    <input type="radio" name="radio_color" /> S
-                  </label>
-                  <label className="btn btn-light active">
-                    <input type="radio" name="radio_color" defaultChecked="" />{" "}
-                    M
-                  </label>
-                  <label className="btn btn-light">
-                    <input type="radio" name="radio_color" /> L
-                  </label>
-                  <label className="btn btn-light">
-                    <input type="radio" name="radio_color" /> XL
-                  </label>
-                </div>
-              </div>
-            </div>{" "}
-            {/* row.// */}
-            <hr />
-            {product.stock > 0 ?(
-                              
-                              <AddToCartButton product_id={product.id}/>
-            
-                              ):(<label className="btn btn-block btn-secondary">Out of Stock</label>)}
-          </article>{" "}
-          {/* product-info-aside .// */}
-        </main>{" "}
-        {/* col.// */}
-      </div>{" "}
-      {/* row.// */}
-    </div>{" "}
-    {/* card.// */}
-    {/* ============================ COMPONENT 1 END .// ================================= */}
-  
-  </div>{" "}
-  {/* container .//  */}
-  </section>
-</>
-    )
+          </div>
+        </div>
+      </section>
+    </>
+  )
 }
